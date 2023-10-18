@@ -2,9 +2,10 @@ import gpiod
 import time
 import threading
 from logzero import logger
+from typing import Dict, List
 
 # from https://developer.nvidia.com/embedded/learn/jetson-nano-2gb-devkit-user-guide
-DEFAULT_LINE_MAP: dict[str, dict] = {
+DEFAULT_LINE_MAP: Dict[str, dict] = {
     'JETSON_NANO' : {
          3: 'J3',
          5: 'J2',
@@ -72,15 +73,25 @@ class HX711:
             # Mutex for reading from the HX711, in case multiple threads in client
             # software try to access get values from the class at the same time.
             self.readLock = threading.Lock()
-        
-        self.PD_SCK.request(
-            consumer=DEFAULT_GPIOD_CONSUMER,
-            type=gpiod.LINE_REQ_DIR_OUT
-        )
-        self.DOUT.request(
-            consumer=DEFAULT_GPIOD_CONSUMER,
-            type=gpiod.LINE_REQ_DIR_IN
-        )
+
+        self.PD_SCK_config = gpiod.line_request()
+        self.PD_SCK_config.consumer = DEFAULT_GPIOD_CONSUMER
+        self.PD_SCK_config.request_type = gpiod.line_request.DIRECTION_OUTPUT
+        self.PD_SCK.request(self.PD_SCK_config)
+
+        self.DOUT_config = gpiod.line_request()
+        self.DOUT_config.consumer = DEFAULT_GPIOD_CONSUMER
+        self.DOUT_config.request_type = gpiod.line_request.DIRECTION_INPUT
+        self.DOUT.request(self.DOUT_config)
+
+        # self.PD_SCK.request(
+        #     consumer=DEFAULT_GPIOD_CONSUMER,
+        #     type=gpiod.line_request.DIRECTION_OUTPUT
+        # )
+        # self.DOUT.request(
+        #     consumer=DEFAULT_GPIOD_CONSUMER,
+        #     type=gpiod.line_request.DIRECTION_INPUT
+        # )
         
         self.GAIN:int = 0
 
@@ -162,7 +173,7 @@ class HX711:
        return byteValue 
 
      
-    def readRawBytes(self) -> list[int]:
+    def readRawBytes(self) -> List[int]:
         if self.mutex_flag:
             # Wait for and get the Read Lock, incase another thread is already
             # driving the HX711 serial interface.

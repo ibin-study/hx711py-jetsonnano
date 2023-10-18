@@ -17,13 +17,12 @@ def cleanAndExit():
     print("Cleaning...")
 
     if not EMULATE_HX711:
-        chip.close()
-        
+        chip.reset()
     print("Bye!")
     sys.exit()
 
 if not EMULATE_HX711:
-    chip = gpiod.Chip("0", gpiod.Chip.OPEN_BY_NUMBER)
+    chip = gpiod.chip("0", gpiod.chip.OPEN_BY_NUMBER)
 
 hx = HX711(dout = 11, pd_sck = 7, chip = chip)
 
@@ -49,7 +48,7 @@ hx.reset()
 hx.tare()
 
 print("Tare done! Add weight now...")
-
+time.sleep(3)
 # to use both channels, you'll need to tare them both
 #hx.tare_A()
 #hx.tare_B()
